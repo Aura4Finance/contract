@@ -1,7 +1,7 @@
-# SuiPay Smart Contract
+# ORAFI Smart Contract
 
 ## Overview
-This directory contains the smart contract code for the SuiPay Merchant Payment Gateway, deployed on the Sui blockchain.
+This directory contains the smart contract code for the orafi Merchant Payment Gateway, deployed on the Sui blockchain.
 
 ## Purpose
 - Implements core payment logic, merchant registration, wallet management, and payment status tracking on-chain.
