@@ -2,7 +2,6 @@ module orafi::main {
 
 use sui::balance;
 use sui::coin::{Self, Coin};
-use usdc::usdc::USDC;
 
 const ADMIN_PUBLIC_KEY: address =
     @0x997043ec15507d6f1d52c5b5396fcc9f8b0db67495dedc7d6b5927f24271f7f1;
@@ -16,15 +15,15 @@ const E_INSUFFICIENT_BALANCE: u64 = 1;
 const E_UNAUTHORIZED: u64 = 2;
 const E_BALANCE_MISMATCH: u64 = 3;
 
-public struct Wallet has key, store {
+public struct Wallet<phantom T> has key, store {
     id: UID,
     merchant: address,
     amount: u64,
 }
 
 // Generate a payment wallet for a merchant
-public fun generatePaymentWallet(merchantWalletAddress: address, amount: u64, ctx: &mut TxContext) {
-    let wallet = Wallet {
+public fun generatePaymentWallet<T: copy + drop>(merchantWalletAddress: address, amount: u64, ctx: &mut TxContext) {
+    let wallet: Wallet<T> = Wallet {
         id: object::new(ctx),
         merchant: merchantWalletAddress,
         amount,
@@ -35,7 +34,7 @@ public fun generatePaymentWallet(merchantWalletAddress: address, amount: u64, ct
 }
 
 // Receive payment, extract fees, and send remainder to merchant
-public fun pay(coin: Coin<USDC>, wallet: Wallet, ctx: &mut TxContext) {
+public fun pay<T: copy + drop>(coin: Coin<T>, wallet: Wallet<T>, ctx: &mut TxContext) {
     let Wallet { id, merchant, amount } = wallet;
     assert!(coin.value() == amount, E_BALANCE_MISMATCH);
     let fee_amount = (amount * FEE_BASIS_POINTS) / BASIS_POINTS_DIVISOR;
