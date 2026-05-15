@@ -7,4 +7,4 @@ license = " MIT"
 usdc = { git = "https://github.com/circlefin/stablecoin-sui.git", subdir = "packages/usdc", rev = "master" }
 
 [addresses]
-orafi = "0x15149164d86a1b58ed8f0031a685c33533ec6cd0431b12736f0ee6c58bf736d8"
+orafi = "0x0"

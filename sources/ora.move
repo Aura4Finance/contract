@@ -12,7 +12,6 @@ const BASIS_POINTS_DIVISOR: u64 = 10000;
 
 // Error codes
 const E_INSUFFICIENT_BALANCE: u64 = 1;
-const E_UNAUTHORIZED: u64 = 2;
 const E_BALANCE_MISMATCH: u64 = 3;
 
 public struct Wallet<phantom T> has key, store {
@@ -66,12 +65,7 @@ public fun pay<T: copy + drop>(coin: Coin<T>, wallet: Wallet<T>, ctx: &mut TxCon
     ) {
 
     assert!(coin_obj.value() >= amount, E_INSUFFICIENT_BALANCE); // E_INSUFFICIENT_BALANCE
-
-    let fee_amount = (amount * FEE_BASIS_POINTS) / BASIS_POINTS_DIVISOR;
-    let mut withdraw_coin = coin_obj.split(amount, ctx);
-    let fee_coin = withdraw_coin.split(fee_amount, ctx);
-
-    transfer::public_transfer(fee_coin, ADMIN_PUBLIC_KEY);
+    let withdraw_coin = coin_obj.split(amount, ctx);
     transfer::public_transfer(withdraw_coin, destination);
     transfer::public_transfer(coin_obj, ctx.sender())
 }
