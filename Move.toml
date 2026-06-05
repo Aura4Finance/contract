@@ -3,8 +3,8 @@ name = "orafi"
 version = "0.0.1"
 edition = "2024.alpha"
 
+# Base configuration defaults to testnet
 [dependencies]
-# Overrides to keep the dependency tree flattened and healthy
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet", override = true }
 MoveStdlib = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/move-stdlib", rev = "framework/testnet", override = true }
 deepbook = { git = "https://github.com/MystenLabs/deepbookv3.git", subdir = "packages/deepbook", rev = "main" }
@@ -12,3 +12,10 @@ usdc = { git = "https://github.com/circlefin/stablecoin-sui.git", subdir = "pack
 
 [addresses]
 orafi = "0x0"
+
+# --- Production Mainnet Environment Override ---
+[env.mainnet.dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/mainnet", override = true }
+MoveStdlib = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/move-stdlib", rev = "framework/mainnet", override = true }
+deepbook = { git = "https://github.com/MystenLabs/deepbookv3.git", subdir = "packages/deepbook", rev = "mainnet" }
+usdc = { git = "https://github.com/circlefin/stablecoin-sui.git", subdir = "packages/usdc", rev = "mainnet" }
