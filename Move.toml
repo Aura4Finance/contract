@@ -1,10 +1,14 @@
 [package]
-name = "Ora"
-edition = "2024.beta"
-license = " MIT"
+name = "orafi"
+version = "0.0.1"
+edition = "2024.alpha" # Enforces standard Move 2024 syntax
 
 [dependencies]
-usdc = { git = "https://github.com/circlefin/stablecoin-sui.git", subdir = "packages/usdc", rev = "master" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
+DeepBook = { git = "https://github.com/MystenLabs/deepbookv3.git", subdir = "packages/deepbook", rev = "main" }
+USDC = { git = "https://github.com/circlefin/stablecoin-sui.git", subdir = "packages/usdc", rev = "master" }
 
 [addresses]
-orafi = "0x15149164d86a1b58ed8f0031a685c33533ec6cd0431b12736f0ee6c58bf736d8"
+orafi = "0x0"
+deepbook = "0xdeeb7a4662eec9f2f3def03fb937a663dddaa2e215b8078a284d026b7946501"
+usdc = "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7"
