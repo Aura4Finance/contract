@@ -1,6 +1,6 @@
 [package]
 name = "orafi"
-version = "0.0.1"
+version = "0.0.3"
 edition = "2024.alpha" # Enforces standard Move 2024 syntax
 
 [dependencies]
