@@ -1,3 +1,4 @@
+#[allow(lint(self_transfer))]
 module orafi::main {
 
     use sui::balance;
@@ -5,7 +6,10 @@ module orafi::main {
     use sui::clock::Clock;
     use sui::event;
     use deepbook::pool::{Self, Pool};
-    use deepbook::deep::DEEP;
+    
+    // In DeepBook V3, the DEEP type is located directly in deepbook::deep module.
+    // If your compiler flags an unbound module here, make sure your deepbook dependency rev is stable.
+    use token::deep::DEEP;
     use usdc::usdc::USDC;
 
     // Hardcoded administrative address for fee collection
@@ -42,7 +46,7 @@ module orafi::main {
         id: UID,
         merchant: address,
         amount: u64,
-        transaction_id: u64, // Added transaction identifier
+        transaction_id: u64,
     }
 
     /// Generate a payment wallet for a merchant and emit creation event
@@ -62,7 +66,6 @@ module orafi::main {
             transaction_id,
         };
 
-        // Emit creation metadata for indexing off-chain
         event::emit(WalletCreated {
             wallet_id,
             merchant: merchantWalletAddress,
@@ -85,8 +88,9 @@ module orafi::main {
         let Wallet { id, merchant, amount, transaction_id: _ } = wallet;
         assert!(coin.value() == amount, E_BALANCE_MISMATCH);
 
-        // Swap T -> USDC
-        let (_, usdc_out, deep_remainder) = pool::swap_exact_quantity(
+        // FIX: Capture the base asset balance return instead of using '_' 
+        // to comply with asset ability rules.
+        let (base_asset_remainder, usdc_out, deep_remainder) = pool::swap_exact_quantity(
             pool,
             coin,
             coin::zero<USDC>(ctx),
@@ -96,13 +100,20 @@ module orafi::main {
             ctx,
         );
 
+        // Clean up or return empty remainder coins safely
+        if (base_asset_remainder.value() > 0) {
+            transfer::public_transfer(base_asset_remainder, ctx.sender());
+        } else {
+            base_asset_remainder.destroy_zero();
+        };
+
         if (deep_remainder.value() > 0) {
             transfer::public_transfer(deep_remainder, ctx.sender());
         } else {
             deep_remainder.destroy_zero();
         };
 
-        _distribute_usdc(usdc_out, merchant, amount, id, ctx);
+        distributeUsdc(usdc_out, merchant, amount, id, ctx);
     }
 
     /// Path 2: T is already USDC — skip swap entirely
@@ -114,11 +125,12 @@ module orafi::main {
         let Wallet { id, merchant, amount, transaction_id: _ } = wallet;
         assert!(coin.value() == amount, E_BALANCE_MISMATCH);
 
-        _distribute_usdc(coin, merchant, amount, id, ctx);
+        distributeUsdc(coin, merchant, amount, id, ctx);
     }
 
     /// Shared internal logic — split fee, send to admin + merchant, and emit event
-    fun _distribute_usdc(
+    /// FIX: Removed leading underscore from function name to follow Move compiler rules
+    fun distributeUsdc(
         usdc: Coin<USDC>,
         merchant: address,
         input_amount: u64,
@@ -132,7 +144,6 @@ module orafi::main {
         let mut usdc_balance = coin::into_balance(usdc);
         let fee_balance = balance::split(&mut usdc_balance, fee_amount);
 
-        // Emit settlement event before destroying wallet ID
         event::emit(PaymentProcessed {
             wallet_id: object::uid_to_inner(&wallet_id),
             merchant,
