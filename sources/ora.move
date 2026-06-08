@@ -2,6 +2,7 @@
 module orafi::main {
 
     use sui::balance;
+    use std::string::String;
     use sui::coin::{Self, Coin};
     use sui::clock::Clock;
     use sui::event;
@@ -29,7 +30,7 @@ module orafi::main {
         wallet_id: ID,
         merchant: address,
         amount: u64,
-        transaction_id: u64,
+        transaction_id: String,
     }
 
     public struct PaymentProcessed has copy, drop {
@@ -46,14 +47,14 @@ module orafi::main {
         id: UID,
         merchant: address,
         amount: u64,
-        transaction_id: u64,
+        transaction_id: String,
     }
 
     /// Generate a payment wallet for a merchant and emit creation event
     public fun generatePaymentWallet<T>(
         merchantWalletAddress: address, 
         amount: u64, 
-        transaction_id: u64, 
+        transaction_id: String, 
         ctx: &mut TxContext
     ) {
         let id = object::new(ctx);
