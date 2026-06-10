@@ -6,9 +6,9 @@ module orafi::main {
     use sui::coin::{Self, Coin};
     use sui::clock::Clock;
     use sui::event;
-    use deepbook::pool::{Self, Pool};
+    use deepbook::pool::{ Self as deepbook_pool, Pool as DeepPool };
     use token::deep::DEEP;
-    use cetus_clmm::pool::{ Self, Pool };
+    use cetus_clmm::pool::{ Self as cetus_pool, Pool as CetusPool };
     use cetus_clmm::config::GlobalConfig;
     use usdc::usdc::USDC;
 
@@ -79,7 +79,7 @@ module orafi::main {
 
     public fun pay_swap_cetus<T, USDC>(
     config: &GlobalConfig,
-    pool: &mut Pool<T, USDC>,
+    pool: &mut CetusPool<T, USDC>,
     coin_in: Coin<T>,
     wallet: Wallet<T>,
     a_to_b: bool,              // Passed dynamically from SDK
@@ -91,7 +91,7 @@ module orafi::main {
     assert!(coin_in.value() == amount, E_BALANCE_MISMATCH);
 
     let by_amount_in = true; 
-    let (receive_a, receive_b, receipt) = pool::flash_swap<T, USDC>(
+    let (receive_a, receive_b, receipt) = cetus_pool::flash_swap<T, USDC>(
         config,
         pool,
         a_to_b,
@@ -113,7 +113,7 @@ module orafi::main {
     };
 
     // Repay what is owed based on direction
-    pool::repay_flash_swap<T, USDC>(
+    cetus_pool::repay_flash_swap<T, USDC>(
         config,
         pool,
         if (a_to_b) coin::into_balance(coin_in_remainder) else balance::zero<T>(),
@@ -129,7 +129,7 @@ module orafi::main {
     public fun pay_swap_deepbook<T>(
         coin: Coin<T>,
         wallet: Wallet<T>,
-        pool: &mut Pool<T, USDC>,
+        pool: &mut DeepPool<T, USDC>,
         deep_fee: Coin<DEEP>,
         clock: &Clock,
         ctx: &mut TxContext
@@ -139,7 +139,7 @@ module orafi::main {
 
         // FIX: Capture the base asset balance return instead of using '_' 
         // to comply with asset ability rules.
-        let (base_asset_remainder, usdc_out, deep_remainder) = pool::swap_exact_quantity(
+        let (base_asset_remainder, usdc_out, deep_remainder) = deepbook_pool::swap_exact_quantity(
             pool,
             coin,
             coin::zero<USDC>(ctx),
