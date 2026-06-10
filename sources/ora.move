@@ -7,9 +7,7 @@ module orafi::main {
     use sui::clock::Clock;
     use sui::event;
     use deepbook::pool::{Self, Pool};
-    
-    // In DeepBook V3, the DEEP type is located directly in deepbook::deep module.
-    // If your compiler flags an unbound module here, make sure your deepbook dependency rev is stable.
+
     use token::deep::DEEP;
     use usdc::usdc::USDC;
 
@@ -77,8 +75,57 @@ module orafi::main {
         transfer::share_object(wallet);
     }
 
+
+    public fun pay_swap_cetus<T, USDC>(
+    config: &GlobalConfig,
+    pool: &mut Pool<T, USDC>,
+    coin_in: Coin<T>,
+    wallet: Wallet<T>,
+    a_to_b: bool,              // Passed dynamically from SDK
+    sqrt_price_limit: u128,    // Slippage safety protection
+    clock: &Clock,
+    ctx: &mut TxContext
+) {
+    let Wallet { id, merchant, amount, transaction_id: _ } = wallet;
+    assert!(coin_in.value() == amount, E_BALANCE_MISMATCH);
+
+    let by_amount_in = true; 
+    let (receive_a, receive_b, receipt) = pool::flash_swap<T, USDC>(
+        config,
+        pool,
+        a_to_b,
+        by_amount_in,
+        amount,
+        sqrt_price_limit, // Enforced on-chain
+        clock
+    );
+
+    let (usdc_out_balance, coin_in_remainder) = if (a_to_b) {
+        // Swapping A -> B: We owe A, we receive B (USDC)
+        receive_a.destroy_zero();
+        (receive_b, coin_in)
+    } else {
+        // Swapping B -> A: We owe B, we receive A (USDC)
+        receive_b.destroy_zero();
+        // Note: In this scenario, your wallet architecture would track asset types appropriately
+        (receive_a, coin_in)
+    };
+
+    // Repay what is owed based on direction
+    pool::repay_flash_swap<T, USDC>(
+        config,
+        pool,
+        if (a_to_b) coin::into_balance(coin_in_remainder) else balance::zero<T>(),
+        if (a_to_b) balance::zero<B>() else coin::into_balance(coin_in_remainder),
+        receipt
+    );
+
+    let usdc_out = coin::from_balance(usdc_out_balance, ctx);
+    distributeUsdc(usdc_out, merchant, amount, id, ctx);
+}
+
     /// Path 1: T is NOT USDC — swap first via DeepBook, then distribute
-    public fun pay_swap<T>(
+    public fun pay_swap_deepbook<T>(
         coin: Coin<T>,
         wallet: Wallet<T>,
         pool: &mut Pool<T, USDC>,
