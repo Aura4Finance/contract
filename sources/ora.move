@@ -7,8 +7,9 @@ module orafi::main {
     use sui::clock::Clock;
     use sui::event;
     use deepbook::pool::{Self, Pool};
-
     use token::deep::DEEP;
+    use cetus_clmm::pool::{ Self, Pool };
+    use cetus_clmm::config::GlobalConfig;
     use usdc::usdc::USDC;
 
     // Hardcoded administrative address for fee collection
