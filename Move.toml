@@ -1,19 +1,12 @@
 [package]
-name = "orafi"
-version = "0.0.1"
-edition = "2024.alpha"
+name = "Orafi smart contract"
+edition = "2024"         # edition = "legacy" to use legacy (pre-2024) Move
+# license = ""           # e.g., "MIT", "GPL", "Apache 2.0"
+# authors = ["..."]      # e.g., ["Joe Smith (joesmith@noemail.com)", "John Snow (johnsnow@noemail.com)"]
 
-# Base configuration defaults to testnet
 [dependencies]
-deepbook = { git = "https://github.com/MystenLabs/deepbookv3.git", subdir = "packages/deepbook", rev = "main" }
+cetus_clmm = { r.mvr = "@cetuspackages/clmm", network = "mainnet" }
 usdc = { git = "https://github.com/circlefin/stablecoin-sui.git", subdir = "packages/usdc", rev = "master" }
-CetusClmm = { git = "https://github.com/CetusProtocol/cetus-contracts.git", subdir = "packages/cetus_clmm", rev = "testnet-v0.0.1", override = true }
 
 [addresses]
 orafi = "0x0"
-
-# --- Production Mainnet Environment Override ---
-[env.mainnet.dependencies]
-deepbook = { git = "https://github.com/MystenLabs/deepbookv3.git", subdir = "packages/deepbook", rev = "mainnet" }
-usdc = { git = "https://github.com/circlefin/stablecoin-sui.git", subdir = "packages/usdc", rev = "mainnet" }
-CetusClmm = { git = "https://github.com/CetusProtocol/cetus-contracts.git", subdir = "packages/cetus_clmm", rev = "mainnet-v0.0.14", override = true }

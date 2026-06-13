@@ -6,8 +6,6 @@ module orafi::main {
     use sui::coin::{Self, Coin};
     use sui::clock::Clock;
     use sui::event;
-    use deepbook::pool::{ Self as deepbook_pool, Pool as DeepPool };
-    use token::deep::DEEP;
     use cetus_clmm::pool::{ Self as cetus_pool, Pool as CetusPool };
     use cetus_clmm::config::GlobalConfig;
     use usdc::usdc::USDC;
@@ -76,48 +74,9 @@ module orafi::main {
         transfer::share_object(wallet);
     }
 
-        public fun pay_swap_deepbook<T>(
-        coin: Coin<T>,
-        wallet: Wallet<T>,
-        pool: &mut DeepPool<T, USDC>,
-        deep_fee: Coin<DEEP>,
-        clock: &Clock,
-        ctx: &mut TxContext
-    ) {
-        let Wallet { id, merchant, amount, transaction_id: _ } = wallet;
-        assert!(coin.value() == amount, E_BALANCE_MISMATCH);
-
-        // FIX: Capture the base asset balance return instead of using '_' 
-        // to comply with asset ability rules.
-        let (base_asset_remainder, usdc_out, deep_remainder) = deepbook_pool::swap_exact_quantity(
-            pool,
-            coin,
-            coin::zero<USDC>(ctx),
-            deep_fee,
-            0,
-            clock,
-            ctx,
-        );
-
-        // Clean up or return empty remainder coins safely
-        if (base_asset_remainder.value() > 0) {
-            transfer::public_transfer(base_asset_remainder, ctx.sender());
-        } else {
-            base_asset_remainder.destroy_zero();
-        };
-
-        if (deep_remainder.value() > 0) {
-            transfer::public_transfer(deep_remainder, ctx.sender());
-        } else {
-            deep_remainder.destroy_zero();
-        };
-
-        distributeUsdc(usdc_out, merchant, amount, id, ctx);
-    }
 
 
-
-    public fun pay_swap_cetus<T>(
+    public fun pay_swap<T>(
     config: &GlobalConfig,
     pool: &mut CetusPool<T, USDC>,
     coin_in: Coin<T>,
